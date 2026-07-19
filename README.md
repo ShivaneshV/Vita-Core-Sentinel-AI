@@ -8,52 +8,43 @@
 The platform is designed around a multi-tier closed-loop telemetry architecture:
 
 ```mermaid
-flowchart TD
-    subgraph Frontend [React Client Dashboard]
-        UI[Interactive UI Portal]
-        Calib[Calibration Panel: Gain, Cutoff, Lux, Age]
-        DroneHUD[60FPS Autopilot HUD Simulator]
-        SciLib[Scientific Grounding Library: MDPI Model]
-        PrintCert[Institutional Lab Sheet Print View]
-    end
+graph TD
+    %% Define Styles for Human-Made Look
+    classDef default fill:#111827,stroke:#374151,stroke-width:1px,color:#d1d5db;
+    classDef highlight fill:#064e3b,stroke:#059669,stroke-width:1.5px,color:#34d399;
+    classDef storage fill:#1f2937,stroke:#4b5563,stroke-width:1px,color:#9ca3af;
+    classDef alert fill:#7f1d1d,stroke:#dc2626,stroke-width:1.5px,color:#f87171;
 
-    subgraph Backend [Node.js Express Gateway]
-        API[Express REST API]
-        DB[(SQLite3 Database: Calibration & Telemetry Logs)]
-        SMS[Simulated & Twilio SMS Gateway]
+    %% Telemetry & Ingestion Flow
+    A["📷 Drone Autopilot Sweep"] -->|1. Upload Glow Image| B["🖥️ Node.js Express Gateway"]
+    
+    %% Calibration & Database Sync
+    B -->|2. Sync Settings| C[("💾 SQLite Database")]
+    B -->|3. Query Predictions| D["🧠 PyTorch CNN Server"]
+    
+    %% Processing Pipeline Subgraph
+    subgraph Pipeline [AI Processing Pipeline]
+        D -->|Segment Contours| D1["🔍 OpenCV Color Filter"]
+        D1 -->|Feature Tensors| D2["📉 PyTorch Regression"]
+        D2 -->|Calibrate Decay/Noise| D3["⚡ SNR Validation Check"]
     end
-
-    subgraph AIServer [PyTorch CNN & OpenCV microservice]
-        Flask[Flask API Server]
-        CV[OpenCV green HSV channel contour extractor]
-        CNN[PyTorch CNN regression network]
-        SNRCalc[SNR & Decay validation calculator]
-        Heuristic[Wavelength-Hue Heuristic fallback]
-    end
-
-    subgraph LLM [Generative AI & RAG Engine]
-        Gemini[Google Gemini API]
-        RAG[Retrieval Augmented Guidelines catalog]
-    end
-
-    %% Client and Server Data Flow
-    UI -->|1. Setup Calibrations| API
-    API -->|Save Parameters| DB
     
-    DroneHUD -->|2. Ingest Glow Images + Calib Parameters| API
-    API -->|3. Forward Payload & Telemetry| Flask
+    D3 -->|4. Return Metrics & SNR| B
     
-    Flask -->|4. Segment Contours| CV
-    CV -->|Standardized Tensors| CNN
-    CNN -->|Soil Predictors| SNRCalc
-    Flask -.->|Model weight fallback| Heuristic
-    SNRCalc -->|5. SNR & Validation Logs| API
+    %% Decision & Action
+    B -->|5. Evaluate Stress Limits| E{"⚠️ Critical Stress?"}
     
-    API -->|6. Query metrics & RAG guidelines| Gemini
-    Gemini -->|7. Generate Agronomy Remediation Report| API
+    E -->|No| F["✅ Log telemetry & update dashboard UI"]
+    E -->|Yes| G["🤖 Gemini generative RAG engine"]
     
-    API -->|8. Dispatch warnings & notifications| SMS
-    API -->|9. Output single-page lab sheets| PrintCert
+    G -->|6. Load soil guidelines| H["📋 Remediation Advisory Report"]
+    H -->|7. Send alerts| I["📱 SMS Gateway (Twilio)"]
+    H -->|8. Generate pdf| J["🖨️ Laboratory Sheet Certificate"]
+    
+    %% Apply styled classes
+    class A,D2,D3 highlight;
+    class C storage;
+    class E,I alert;
 ```
 
 ### 1. **Vite React Frontend** (`/frontend`)
