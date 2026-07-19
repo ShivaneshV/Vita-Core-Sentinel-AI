@@ -5,18 +5,55 @@
 
 ## 🏗️ System Architecture
 
-The platform is designed around a three-tier architecture:
+The platform is designed around a multi-tier closed-loop telemetry architecture:
 
 ```mermaid
-graph TD
-    Client["Vite React Frontend"] -->|API Requests| Express["Node.js Express Backend"]
-    Express -->|Data Responses| Client
-    Express -->|Read/Write| DB[("sqlite3 Database")]
-    Express -->|Image Post + Calib| PyServer["PyTorch CNN Server"]
-    PyServer -->|Metrics JSON + SNR| Express
-    Express -->|RAG Guidelines| Gemini["Gemini LLM Advisor"]
-    Gemini -->|Remediation Report| Express
-    Express -->|Dispatch Alert| SMS["SMS Alerts & Simulator"]
+flowchart TD
+    subgraph Frontend [React Client Dashboard]
+        UI[Interactive UI Portal]
+        Calib[Calibration Panel: Gain, Cutoff, Lux, Age]
+        DroneHUD[60FPS Autopilot HUD Simulator]
+        SciLib[Scientific Grounding Library: MDPI Model]
+        PrintCert[Institutional Lab Sheet Print View]
+    end
+
+    subgraph Backend [Node.js Express Gateway]
+        API[Express REST API]
+        DB[(SQLite3 Database: Calibration & Telemetry Logs)]
+        SMS[Simulated & Twilio SMS Gateway]
+    end
+
+    subgraph AIServer [PyTorch CNN & OpenCV microservice]
+        Flask[Flask API Server]
+        CV[OpenCV green HSV channel contour extractor]
+        CNN[PyTorch CNN regression network]
+        SNRCalc[SNR & Decay validation calculator]
+        Heuristic[Wavelength-Hue Heuristic fallback]
+    end
+
+    subgraph LLM [Generative AI & RAG Engine]
+        Gemini[Google Gemini API]
+        RAG[Retrieval Augmented Guidelines catalog]
+    end
+
+    %% Client and Server Data Flow
+    UI -->|1. Setup Calibrations| API
+    API -->|Save Parameters| DB
+    
+    DroneHUD -->|2. Ingest Glow Images + Calib Parameters| API
+    API -->|3. Forward Payload & Telemetry| Flask
+    
+    Flask -->|4. Segment Contours| CV
+    CV -->|Standardized Tensors| CNN
+    CNN -->|Soil Predictors| SNRCalc
+    Flask -.->|Model weight fallback| Heuristic
+    SNRCalc -->|5. SNR & Validation Logs| API
+    
+    API -->|6. Query metrics & RAG guidelines| Gemini
+    Gemini -->|7. Generate Agronomy Remediation Report| API
+    
+    API -->|8. Dispatch warnings & notifications| SMS
+    API -->|9. Output single-page lab sheets| PrintCert
 ```
 
 ### 1. **Vite React Frontend** (`/frontend`)
