@@ -222,11 +222,21 @@ app.post('/api/analytics/upload', upload.single('image'), async (req, res) => {
       if (ph < 5.5) issues.push(`Highly Acidic Soil (pH ${ph})`);
       if (ph > 8.0) issues.push(`Highly Alkaline Soil (pH ${ph})`);
       
-      alertMessage += issues.join(' & ') + `. Immediate corrective irrigation/fertilization recommended.`;
+      alertMessage += issues.join(' & ') + `. Recovery Protocol: `;
+      const steps = [];
+      if (moisture < 30) steps.push(`Verify water valve/irrigate immediately.`);
+      if (nitrogen < 70) steps.push(`Apply Nitrogen/Urea fertilizer uniformly.`);
+      if (ph < 5.5) steps.push(`Apply Agricultural Limestone to balance pH.`);
+      if (ph > 8.0) steps.push(`Apply Elemental Sulfur to reduce pH.`);
+      if (steps.length === 0) {
+        steps.push(`Check sensor calibration metrics.`);
+        steps.push(`Manually inspect soil sample.`);
+      }
+      alertMessage += steps.map((s, idx) => `Step ${idx + 1}: ${s}`).join(' ');
       
       smsDispatched = await dispatchSMS('+91-99880-12345', alertMessage, predictionId);
     } else if (valCode === 'SENSOR_QUENCHED') {
-      let alertMessage = `VITA-CORE TOXICITY WARNING: Complete biosensor quenching detected in ${field.name}. Soil toxicity or contamination suspected. Suspension of standard fertilization required.`;
+      let alertMessage = `VITA-CORE TOXICITY WARNING: Complete biosensor quenching detected in ${field.name}. Soil toxicity or contamination suspected. Recovery Protocol: Step 1: STOP all chemical fertilization. Step 2: Flush soil roots with clean organic water. Step 3: Apply active carbon or Pseudomonas bio-remediation. Step 4: Re-inoculate fresh mycelium plugs in 7 days.`;
       smsDispatched = await dispatchSMS('+91-99880-12345', alertMessage, predictionId);
     }
     
@@ -302,6 +312,30 @@ app.post('/api/alerts/read', async (req, res) => {
   try {
     await runAsync('UPDATE alerts SET read_status = 1');
     res.json({ success: true, message: 'All alerts marked as read' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/alerts/send-manual', async (req, res) => {
+  const { message, fieldId } = req.body;
+  if (!message) {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+
+  try {
+    // Resolve predictions connection: find the latest prediction or fallback to default
+    let predictionId = 1;
+    if (fieldId) {
+      const lastPred = await getAsync('SELECT id FROM predictions WHERE field_id = ? ORDER BY created_at DESC LIMIT 1', [fieldId]);
+      if (lastPred) predictionId = lastPred.id;
+    } else {
+      const lastPred = await getAsync('SELECT id FROM predictions ORDER BY created_at DESC LIMIT 1');
+      if (lastPred) predictionId = lastPred.id;
+    }
+
+    const smsDispatched = await dispatchSMS('+91-99880-12345', message, predictionId);
+    res.json({ success: true, smsDispatched });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

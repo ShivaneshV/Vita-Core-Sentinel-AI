@@ -19,6 +19,8 @@ export default function Dashboard({ backendUrl, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [importedImage, setImportedImage] = useState(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [manualSmsText, setManualSmsText] = useState('');
   const [thresholds, setThresholds] = useState({
     rice: { minN: 120, minM: 70, minPh: 6.0, maxPh: 7.0 },
     wheat: { minN: 140, minM: 45, minPh: 6.0, maxPh: 7.5 },
@@ -31,6 +33,15 @@ export default function Dashboard({ backendUrl, onLogout }) {
     if (field && field.id) {
       setSelectedFieldId(field.id);
     }
+  };
+
+  const formatAlertTime = (dateStr) => {
+    if (!dateStr) return '';
+    let parsedDate = dateStr;
+    if (typeof dateStr === 'string' && !dateStr.includes('Z') && !dateStr.includes('T')) {
+      parsedDate = dateStr.replace(' ', 'T') + 'Z';
+    }
+    return new Date(parsedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   // Fetch all sectors and alerts from backend
@@ -80,6 +91,36 @@ export default function Dashboard({ backendUrl, onLogout }) {
     }
   };
 
+  // Send manual SMS handler
+  const handleManualSMSSend = async (e) => {
+    e.preventDefault();
+    if (!manualSmsText.trim()) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${backendUrl}/api/alerts/send-manual`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify({
+          message: manualSmsText,
+          fieldId: selectedField.id
+        })
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setManualSmsText('');
+        fetchData();
+      } else {
+        console.error("Failed to send manual SMS:", data.error);
+      }
+    } catch (error) {
+      console.error("Error sending manual SMS:", error);
+    }
+  };
+
   if (loading || !selectedField) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-950 text-slate-200">
@@ -110,12 +151,53 @@ export default function Dashboard({ backendUrl, onLogout }) {
 
           <div className="flex items-center gap-4">
             {/* Alerts Bell */}
-            <div className="relative group cursor-pointer" onClick={markAlertsAsRead}>
-              <Bell className="h-5 w-5 text-slate-400 hover:text-slate-100 transition-colors" />
-              {alerts.filter(a => a.read_status === 0).length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-3xs font-bold text-slate-100 animate-pulse">
-                  {alerts.filter(a => a.read_status === 0).length}
-                </span>
+            <div className="relative cursor-pointer">
+              <div onClick={() => setShowNotifications(!showNotifications)}>
+                <Bell className="h-5 w-5 text-slate-400 hover:text-slate-100 transition-colors" />
+                {alerts.filter(a => a.read_status === 0).length > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-3xs font-bold text-slate-100 animate-pulse">
+                    {alerts.filter(a => a.read_status === 0).length}
+                  </span>
+                )}
+              </div>
+              
+              {/* Notifications Dropdown */}
+              {showNotifications && (
+                <div 
+                  className="absolute right-0 mt-3 w-80 rounded-xl border border-slate-800 bg-slate-950/95 backdrop-blur-md p-4 shadow-2xl z-50 text-left cursor-default animate-fadeIn"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between border-b border-slate-900 pb-2 mb-3">
+                    <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Alert Notifications</span>
+                    {alerts.filter(a => a.read_status === 0).length > 0 && (
+                      <button 
+                        onClick={markAlertsAsRead}
+                        className="text-[10px] font-bold text-emerald-450 hover:underline uppercase tracking-wider bg-transparent border-none p-0 cursor-pointer"
+                      >
+                        Mark all as read
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-60 overflow-y-auto space-y-2.5 scrollbar-thin scrollbar-track-slate-950 scrollbar-thumb-slate-900 pr-1">
+                    {alerts.length === 0 ? (
+                      <div className="py-6 text-center text-3xs text-slate-600 uppercase font-mono">
+                        No alerts recorded
+                      </div>
+                    ) : (
+                      alerts.map((alert) => (
+                        <div key={alert.id} className={`p-2.5 rounded border text-3xs transition-colors ${alert.read_status === 0 ? 'bg-slate-900 border-emerald-500/20' : 'bg-slate-950/45 border-slate-900/80'}`}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className={`inline-block h-1.5 w-1.5 rounded-full ${alert.read_status === 0 ? 'bg-emerald-400 animate-pulse' : 'bg-slate-700'}`} />
+                            <span className="text-[9px] font-mono text-slate-500">
+                              {formatAlertTime(alert.created_at)}
+                            </span>
+                          </div>
+                          <p className="text-slate-300 font-sans leading-normal">{alert.message}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
               )}
             </div>
 
@@ -258,7 +340,7 @@ export default function Dashboard({ backendUrl, onLogout }) {
                         <Smartphone className="h-2.5 w-2.5 text-emerald-400" /> SMS Dispatched
                       </span>
                       <span className="text-4xs font-mono text-slate-500">
-                        {new Date(alert.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {formatAlertTime(alert.created_at)}
                       </span>
                     </div>
                     <p className="text-3xs text-slate-350 leading-relaxed font-sans">{alert.message}</p>
@@ -267,6 +349,24 @@ export default function Dashboard({ backendUrl, onLogout }) {
                 ))
               )}
             </div>
+            
+            {/* Quick SMS Dispatcher (Manual Sending) */}
+            <form onSubmit={handleManualSMSSend} className="mt-3 border-t border-slate-900 pt-3 flex gap-2">
+              <input
+                type="text"
+                placeholder="Send manual SMS alert..."
+                value={manualSmsText}
+                onChange={(e) => setManualSmsText(e.target.value)}
+                className="flex-1 rounded bg-slate-900 border border-slate-850 px-2 py-1 text-3xs text-slate-200 focus:outline-none focus:border-emerald-500/50"
+              />
+              <button
+                type="submit"
+                disabled={!manualSmsText.trim()}
+                className="rounded bg-emerald-500 px-2 py-1 text-3xs font-bold text-slate-950 hover:bg-emerald-450 active:scale-95 disabled:opacity-50"
+              >
+                Send
+              </button>
+            </form>
           </div>
         </div>
 

@@ -218,6 +218,38 @@ export default function AIAgronomyReport({ selectedField, backendUrl, onRemediat
     }
   };
 
+  const forwardChatToSMS = async (text) => {
+    try {
+      const token = localStorage.getItem('token');
+      // Format text slightly to fit SMS or send directly
+      const cleanText = text.replace(/#/g, '').replace(/\*/g, ''); // strip markdown headers & bolding
+      
+      const response = await fetch(`${backendUrl}/api/alerts/send-manual`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify({
+          message: cleanText,
+          fieldId: selectedField.id
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        if (onRemediationApplied) {
+          // Triggers fetchData() in parent Dashboard to sync the SMS logs panel immediately
+          onRemediationApplied();
+        }
+      } else {
+        console.error("Failed to forward chat response to SMS:", data.error);
+      }
+    } catch (err) {
+      console.error("Error forwarding chat response to SMS:", err);
+    }
+  };
+
   // Helper to match field to biosensor species
   const getBiosensorSpecies = (fieldId) => {
     switch (fieldId) {
@@ -376,6 +408,18 @@ export default function AIAgronomyReport({ selectedField, backendUrl, onRemediat
               >
                 <Printer className="h-3.5 w-3.5" />
                 Print Certificate
+              </button>
+
+              <button
+                onClick={() => {
+                  if (report && report.report) {
+                    forwardChatToSMS(`Vita-Core Report for ${selectedField.name}:\n` + report.report);
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 rounded border border-slate-800 px-3 py-1.5 text-xs text-slate-400 transition-all hover:bg-slate-800 hover:text-emerald-400"
+              >
+                <Send className="h-3.5 w-3.5 text-emerald-450" />
+                Forward Report as SMS
               </button>
 
               <button
@@ -542,7 +586,7 @@ export default function AIAgronomyReport({ selectedField, backendUrl, onRemediat
               {/* Chat bubbles */}
               <div className="flex-1 space-y-3 overflow-y-auto scrollbar-thin scrollbar-track-slate-950 scrollbar-thumb-slate-900 pr-1 pb-2">
                 {chatHistory.map((msg, idx) => (
-                  <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div key={idx} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
                     <div className={`max-w-[85%] rounded-lg p-2.5 text-3xs leading-relaxed ${
                       msg.sender === 'user'
                         ? 'bg-emerald-500 text-slate-950 font-semibold'
@@ -550,6 +594,14 @@ export default function AIAgronomyReport({ selectedField, backendUrl, onRemediat
                     }`}>
                       {msg.text}
                     </div>
+                    {msg.sender === 'assistant' && (
+                      <button
+                        onClick={() => forwardChatToSMS(msg.text)}
+                        className="text-[9px] text-emerald-450 hover:underline mt-1 ml-1 cursor-pointer bg-transparent border-none p-0"
+                      >
+                        Forward as SMS
+                      </button>
+                    )}
                   </div>
                 ))}
                 {chatLoading && (
