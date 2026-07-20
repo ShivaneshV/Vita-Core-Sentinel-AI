@@ -579,6 +579,15 @@ export default function LuminescenceSpectrometry({ selectedField, backendUrl, on
           </div>
 
           <div className="border-t border-slate-800 pt-4 space-y-3">
+            {/* Actuator Link (Hardware) */}
+            <div className="rounded bg-slate-950 p-2.5 text-5xs font-mono text-slate-350 border border-slate-850 space-y-1 text-left">
+              <div className="flex items-center justify-between border-b border-slate-900 pb-1.5 mb-1.5">
+                <span className="text-[8px] font-bold text-sky-400 uppercase tracking-wider">Actuator Link (Hardware)</span>
+                <span className="inline-block px-1 rounded bg-emerald-950/40 border border-emerald-900/40 text-emerald-400 font-bold text-[7.5px]">ONLINE</span>
+              </div>
+              <p><span className="text-slate-500 font-bold">Actuation Relay:</span> Modbus RTU / GPIO Pin 24</p>
+              <p><span className="text-slate-500 font-bold">Relay Channels:</span> Active (Channels 1-8 Ready)</p>
+            </div>
             <button
               onClick={startCalibration}
               disabled={calibrating || calibrationSuccess}
