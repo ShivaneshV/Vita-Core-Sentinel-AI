@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Bell, Smartphone, ShieldAlert, CheckCircle, BarChart3, UploadCloud, Map, Sparkles, UserCheck, Camera, Settings, Sliders, Orbit, Landmark, BookOpen } from 'lucide-react';
+import { Activity, Bell, Smartphone, ShieldAlert, CheckCircle, BarChart3, UploadCloud, Map, Sparkles, UserCheck, Camera, Settings, Sliders, Orbit, Landmark, BookOpen, Leaf } from 'lucide-react';
 import Heatmap from './Heatmap';
 import GlowVisualizer from './GlowVisualizer';
 import LiveDroneFeed from './LiveDroneFeed';
@@ -372,6 +372,39 @@ export default function Dashboard({ backendUrl, onLogout }) {
 
         {/* Dynamic Center Work Area */}
         <div className="lg:col-span-3 space-y-6">
+          {/* Cumulative Ecological Impact Summary */}
+          {activeTab === 'map' && (
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/5 p-4 no-print flex flex-col md:flex-row items-center justify-between gap-4 backdrop-blur-sm">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-emerald-500/10 p-2 text-emerald-400">
+                  <Leaf className="h-5 w-5 animate-pulse" />
+                </div>
+                <div className="text-left">
+                  <span className="block text-2xs font-bold text-slate-200">COOPERATIVE ECOLOGICAL IMPACT SUMMARY</span>
+                  <span className="text-4xs text-slate-500 font-mono">Live environmental conservation indices from active sectors</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-4 md:gap-6 text-left">
+                <div className="bg-slate-950/50 px-3 py-1.5 border border-slate-900 rounded">
+                  <span className="block text-[8px] text-slate-500 uppercase font-bold">Water Saved</span>
+                  <span className="text-xs font-mono font-bold text-sky-400">1,428,500 L</span>
+                </div>
+                <div className="bg-slate-950/50 px-3 py-1.5 border border-slate-900 rounded">
+                  <span className="block text-[8px] text-slate-500 uppercase font-bold">Urea Saved</span>
+                  <span className="text-xs font-mono font-bold text-emerald-400">4,210 kg</span>
+                </div>
+                <div className="bg-slate-950/50 px-3 py-1.5 border border-slate-900 rounded">
+                  <span className="block text-[8px] text-slate-500 uppercase font-bold">Runoff Prevented</span>
+                  <span className="text-xs font-mono font-bold text-amber-500">6,180 kg</span>
+                </div>
+                <div className="bg-slate-950/50 px-3 py-1.5 border border-slate-900 rounded">
+                  <span className="block text-[8px] text-slate-500 uppercase font-bold">CO₂ Sequestrated</span>
+                  <span className="text-xs font-mono font-bold text-slate-200">84.6 T</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 no-print">
             

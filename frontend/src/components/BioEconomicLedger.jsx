@@ -41,11 +41,30 @@ export default function BioEconomicLedger({ selectedField }) {
         <div className="rounded-lg bg-emerald-500/10 p-3 text-emerald-400">
           <Leaf className="h-6 w-6 animate-pulse" />
         </div>
-        <div className="space-y-1">
+        <div className="space-y-1 flex-1">
           <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wide">Macro-Economic Innovation</h3>
           <p className="text-xs text-slate-450 leading-relaxed">
             By measuring mycelial carbon storage (SOC) and preventing chemical fertilizer waste, our system generates double-sided financial returns: **Farmers** receive carbon credit payouts and reduce crop input costs, while **Governments** offset national net-zero emissions targets and reclaim billions in subsidized fertilizer import margins.
           </p>
+        </div>
+      </div>
+
+      {/* Commercial Monetization Strategy */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="rounded-xl border border-slate-900 bg-slate-950/40 p-4 space-y-1 text-left">
+          <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest block">1. B2B SaaS Model</span>
+          <p className="text-[11px] font-semibold text-slate-200">₹500 / Acre / Year</p>
+          <p className="text-5xs text-slate-500 leading-normal">Cooperative-level subscription for automated drone telemetry mapping flights and predictive crop advisory reports.</p>
+        </div>
+        <div className="rounded-xl border border-slate-900 bg-slate-950/40 p-4 space-y-1 text-left">
+          <span className="text-[9px] font-bold text-sky-400 uppercase tracking-widest block">2. Carbon Brokerage</span>
+          <p className="text-[11px] font-semibold text-slate-200">10% Transaction Fee</p>
+          <p className="text-5xs text-slate-500 leading-normal">Commission charged on verified Soil Organic Carbon (SOC) carbon offset trades executed directly through the sentinel ledger.</p>
+        </div>
+        <div className="rounded-xl border border-slate-900 bg-slate-950/40 p-4 space-y-1 text-left">
+          <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest block">3. B2G Revenue Share</span>
+          <p className="text-[11px] font-semibold text-slate-200">5% Subsidy Recovery Cut</p>
+          <p className="text-5xs text-slate-500 leading-normal">Shared savings commission agreement from the national fertilizer subsidy outlay budgets reclaimed using our precision mapping.</p>
         </div>
       </div>
 

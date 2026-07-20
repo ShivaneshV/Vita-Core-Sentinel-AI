@@ -682,13 +682,17 @@ export default function LuminescenceSpectrometry({ selectedField, backendUrl, on
               <b className="text-slate-500">Status Check:</b>{' '}
               <span className={`font-bold ${
                 (20 * Math.log10((180 * Math.max(0.1, 1 - (myceliumAge / 45))) / Math.max(1, Math.max(1, ambientLux * 15)))) > 15 ? 'text-emerald-450' :
-                (20 * Math.log10((180 * Math.max(0.1, 1 - (myceliumAge / 45))) / Math.max(1, Math.max(1, ambientLux * 15)))) >= 8 ? 'text-yellow-450' : 'text-red-450'
+                (20 * Math.log10((180 * Math.max(0.1, 1 - (myceliumAge / 45))) / Math.max(1, Math.max(1, ambientLux * 15)))) >= 8 ? 'text-yellow-400 text-yellow-500' : 'text-red-450'
               }`}>
                 {(20 * Math.log10((180 * Math.max(0.1, 1 - (myceliumAge / 45))) / Math.max(1, Math.max(1, ambientLux * 15)))) > 15 ? 'LOCK_OK' :
                  (20 * Math.log10((180 * Math.max(0.1, 1 - (myceliumAge / 45))) / Math.max(1, Math.max(1, ambientLux * 15)))) >= 8 ? 'WARN_NOISE' : 'SIGNAL_DROWNED'
                 }
               </span>
             </p>
+            <span className="text-4xs font-bold text-sky-400 uppercase tracking-widest block border-b border-slate-900 pb-1.5 pt-2 mb-1.5">Actuator Link (Hardware)</span>
+            <p><b className="text-slate-500">Actuation Relay Board:</b> <span className="text-emerald-400 font-bold">ONLINE</span></p>
+            <p><b className="text-slate-500">Shield Connection:</b> GPIO Port 24 / Modbus RTU</p>
+            <p><b className="text-slate-500">Relay Channels 1-8:</b> <span className="text-slate-400">READY</span></p>
           </div>
 
           {/* Canvas Waveforms */}
